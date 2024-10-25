@@ -73,13 +73,13 @@ func TestSchemaMarshalJSON(t *testing.T) {
 			marshaled, err := json.Marshal(tt.schema)
 			assert.NoError(t, err, "Failed to marshal schema")
 
-			assert.JSONEq(t, tt.expected, string(marshaled), "Marshaled JSON does not match expected")
+			assert.JSONEq(t, tt.expected, string(marshaled))
 
 			var unmarshaled tpuf.Schema
 			err = json.Unmarshal(marshaled, &unmarshaled)
 			assert.NoError(t, err, "Failed to unmarshal schema")
 
-			assert.Equal(t, tt.schema, unmarshaled, "Unmarshaled schema does not match original")
+			assert.Equal(t, tt.schema, unmarshaled)
 		})
 	}
 }
