@@ -24,24 +24,6 @@ type Client struct {
 	HttpClient HttpClient
 }
 
-var defaultBaseURL = "https://api.turbopuffer.com/v1"
-
-func (c *Client) baseURL() string {
-	if c.BaseURL == "" {
-		return defaultBaseURL
-	}
-	return c.BaseURL
-}
-
-var defaultHttpClient = &http.Client{}
-
-func (c *Client) httpClient() HttpClient {
-	if c.HttpClient == nil {
-		return defaultHttpClient
-	}
-	return c.HttpClient
-}
-
 type ErrorReponse struct {
 	Status string `json:"status"`
 	Error  string `json:"error"`
