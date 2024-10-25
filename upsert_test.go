@@ -62,7 +62,7 @@ func TestUpsert(t *testing.T) {
 				Body:       io.NopCloser(bytes.NewBufferString(`{"status":"OK"}`)),
 			},
 			expectedMethod: http.MethodPost,
-			expectedURL:    "https://api.turbopuffer.com/v1/v1/vectors/test-namespace",
+			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace",
 			expectedBody:   `{"distance_metric":"cosine_distance","upserts":[{"id":"1","vector":[0.1,0.1],"attributes":{"my-bool":true,"my-string":"one","my-string-array":["a","b"],"my-uint":12}},{"id":"2","vector":[0.2,0.2],"attributes":{"my-string-array":["b","d"]}}]}`,
 		},
 		{
@@ -77,7 +77,7 @@ func TestUpsert(t *testing.T) {
 			},
 			expectedError:  "upsert failed: error: 💔 invalid filter for key my_attr, only Eq/In/Lt/Lte/Gt/Gte/And/Or filters allowed currently for scanning (HTTP 400)",
 			expectedMethod: http.MethodPost,
-			expectedURL:    "https://api.turbopuffer.com/v1/v1/vectors/test-namespace",
+			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace",
 			expectedBody:   `{"upserts":[{"id":"1","vector":[0.1,0.1]}]}`,
 		},
 		{
@@ -87,7 +87,7 @@ func TestUpsert(t *testing.T) {
 			httpError:      &url.Error{Op: "Post", URL: "https://api.turbopuffer.com/v1/v1/vectors/test-namespace", Err: io.EOF},
 			expectedError:  "http request failed: Post \"https://api.turbopuffer.com/v1/v1/vectors/test-namespace\": EOF",
 			expectedMethod: http.MethodPost,
-			expectedURL:    "https://api.turbopuffer.com/v1/v1/vectors/test-namespace",
+			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace",
 			expectedBody:   `{}`,
 		},
 		{
@@ -152,7 +152,7 @@ func TestDelete(t *testing.T) {
 				Body:       io.NopCloser(bytes.NewBufferString(`{"status":"OK"}`)),
 			},
 			expectedMethod: http.MethodPost,
-			expectedURL:    "https://api.turbopuffer.com/v1/v1/vectors/test-namespace",
+			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace",
 			expectedBody:   `{"upserts":[{"id":"1"},{"id":"2"},{"id":"3"}]}`,
 		},
 		{
@@ -165,7 +165,7 @@ func TestDelete(t *testing.T) {
 			},
 			expectedError:  "upsert failed: error: Invalid request (HTTP 400)",
 			expectedMethod: http.MethodPost,
-			expectedURL:    "https://api.turbopuffer.com/v1/v1/vectors/test-namespace",
+			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace",
 			expectedBody:   `{"upserts":[{"id":"4"},{"id":"5"}]}`,
 		},
 	}

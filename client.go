@@ -21,15 +21,15 @@ type Client struct {
 	ApiToken string
 
 	// BaseURL is the base URL for all API endpoints.
-	// Defaults to https://api.turbopuffer.com/v1
+	// Defaults to https://api.turbopuffer.com
 	BaseURL string
 
 	// HttpClient is the HTTP client used for making requests.
-	// Defaults to defaultHttpClient.
+	// Defaults to &http.Client{}.
 	HttpClient HttpClient
 }
 
-var defaultBaseURL = "https://api.turbopuffer.com/v1"
+var defaultBaseURL = "https://api.turbopuffer.com"
 
 func (c *Client) baseURL() string {
 	if c.BaseURL == "" {
