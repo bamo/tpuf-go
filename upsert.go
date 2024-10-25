@@ -29,10 +29,24 @@ type UpsertRequest struct {
 	CopyFromNamespace string         `json:"copy_from_namespace,omitempty"`
 }
 
-// Upsert creates, updates or deletes documents in a namespace.
+// Upsert creates or updates documents in a namespace.
+// Note that although the API supports deletion via the upsert endpoint, this client requires
+// that you use the Delete method explicitly to avoid accidental deletions.
 // See https://turbopuffer.com/docs/upsert
 func (c *Client) Upsert(ctx context.Context, namespace string, request *UpsertRequest) error {
 	return c.upsert(ctx, namespace, request, false)
+}
+
+// Delete deletes documents from a namespace.
+// See https://turbopuffer.com/docs/upsert#document-deletion
+func (c *Client) Delete(ctx context.Context, namespace string, ids []string) error {
+	var upserts []*Upsert
+	for _, id := range ids {
+		upserts = append(upserts, &Upsert{ID: id})
+	}
+	return c.upsert(ctx, namespace, &UpsertRequest{
+		Upserts: upserts,
+	}, true)
 }
 
 func (c *Client) upsert(ctx context.Context, namespace string, request *UpsertRequest, allowDelete bool) error {
