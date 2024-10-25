@@ -44,13 +44,13 @@ type QueryResult struct {
 // For BM25 search, provide RankBy.
 // For filter-only search, omit both Vector and RankBy.
 func (c *Client) Query(ctx context.Context, namespace string, request *QueryRequest) ([]*QueryResult, error) {
-	url := fmt.Sprintf("/v1/vectors/%s/query", namespace)
+	path := fmt.Sprintf("/v1/vectors/%s/query", namespace)
 	reqJson, err := json.Marshal(request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	resp, err := c.post(ctx, url, bytes.NewBuffer(reqJson))
+	resp, err := c.post(ctx, path, bytes.NewBuffer(reqJson))
 	if err != nil {
 		return nil, fmt.Errorf("failed to query documents: %w", err)
 	}
