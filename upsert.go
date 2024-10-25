@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 )
 
@@ -68,8 +67,7 @@ func (c *Client) upsert(ctx context.Context, namespace string, request *UpsertRe
 	defer resp.Body.Close()
 
 	err = c.toApiError(resp)
-	var apiErr ApiError
-	if !errors.As(err, &apiErr) || apiErr.Status != ApiStatusOK {
+	if err != nil {
 		return fmt.Errorf("upsert failed: %w", err)
 	}
 	return nil

@@ -55,6 +55,10 @@ func (c *Client) post(ctx context.Context, path string, body io.Reader) (*http.R
 	return c.do(ctx, http.MethodPost, path, nil, body)
 }
 
+func (c *Client) delete(ctx context.Context, path string) (*http.Response, error) {
+	return c.do(ctx, http.MethodDelete, path, nil, nil)
+}
+
 func (c *Client) do(ctx context.Context, method string, path string, values url.Values, body io.Reader) (*http.Response, error) {
 	endpoint, err := url.JoinPath(c.baseURL(), path)
 	if err != nil {
@@ -86,6 +90,9 @@ func (c *Client) toApiError(resp *http.Response) error {
 	}
 	if decodeErr := json.Unmarshal(respBody, &apiErr); decodeErr != nil {
 		return fmt.Errorf("failed to decode api error: %w (raw response: %s, status code: %d)", decodeErr, string(respBody), resp.StatusCode)
+	}
+	if resp.StatusCode == http.StatusOK && apiErr.Status == ApiStatusOK {
+		return nil
 	}
 	return apiErr
 }
