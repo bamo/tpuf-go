@@ -14,11 +14,6 @@ linters-settings:
     rules:
       - name: cyclomatic
         arguments: [10]
-      - name: line-length-limit
-        arguments: [100]
 
 run:
   timeout: 5m
-
-issues:
-  exclude-use-default: false
