@@ -47,16 +47,30 @@ func (c *Client) httpClient() HttpClient {
 	return c.HttpClient
 }
 
-func (c *Client) post(ctx context.Context, path string, body io.Reader) (*http.Response, error) {
-	return c.do(ctx, http.MethodPost, path, body)
+func (c *Client) get(ctx context.Context, path string, values url.Values) (*http.Response, error) {
+	return c.do(ctx, http.MethodGet, path, values, nil)
 }
 
-func (c *Client) do(ctx context.Context, method string, path string, body io.Reader) (*http.Response, error) {
+func (c *Client) post(ctx context.Context, path string, body io.Reader) (*http.Response, error) {
+	return c.do(ctx, http.MethodPost, path, nil, body)
+}
+
+func (c *Client) delete(ctx context.Context, path string) (*http.Response, error) {
+	return c.do(ctx, http.MethodDelete, path, nil, nil)
+}
+
+func (c *Client) do(ctx context.Context, method string, path string, values url.Values, body io.Reader) (*http.Response, error) {
 	endpoint, err := url.JoinPath(c.baseURL(), path)
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequestWithContext(ctx, method, endpoint, body)
+	reqUrl, err := url.Parse(endpoint)
+	if err != nil {
+		return nil, err
+	}
+	reqUrl.RawQuery = values.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, method, reqUrl.String(), body)
 	if err != nil {
 		return nil, err
 	}
@@ -76,6 +90,9 @@ func (c *Client) toApiError(resp *http.Response) error {
 	}
 	if decodeErr := json.Unmarshal(respBody, &apiErr); decodeErr != nil {
 		return fmt.Errorf("failed to decode api error: %w (raw response: %s, status code: %d)", decodeErr, string(respBody), resp.StatusCode)
+	}
+	if resp.StatusCode == http.StatusOK && apiErr.Status == ApiStatusOK {
+		return nil
 	}
 	return apiErr
 }

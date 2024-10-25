@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 )
 
@@ -49,7 +48,7 @@ func (c *Client) Delete(ctx context.Context, namespace string, ids []string) err
 }
 
 func (c *Client) upsert(ctx context.Context, namespace string, request *UpsertRequest, allowDelete bool) error {
-	url := fmt.Sprintf("/v1/vectors/%s", namespace)
+	path := fmt.Sprintf("/v1/vectors/%s", namespace)
 	if !allowDelete {
 		for _, upsert := range request.Upserts {
 			if len(upsert.Vector) == 0 {
@@ -61,15 +60,14 @@ func (c *Client) upsert(ctx context.Context, namespace string, request *UpsertRe
 	if err != nil {
 		return fmt.Errorf("failed to marshal request: %w", err)
 	}
-	resp, err := c.post(ctx, url, bytes.NewBuffer(reqJson))
+	resp, err := c.post(ctx, path, bytes.NewBuffer(reqJson))
 	if err != nil {
 		return fmt.Errorf("http request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	err = c.toApiError(resp)
-	var apiErr ApiError
-	if !errors.As(err, &apiErr) || apiErr.Status != ApiStatusOK {
+	if err != nil {
 		return fmt.Errorf("upsert failed: %w", err)
 	}
 	return nil
