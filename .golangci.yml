@@ -1,0 +1,16 @@
+linters:
+  enable:
+    - gofmt
+    - golint
+    - govet
+    - errcheck
+    - staticcheck
+    - gosimple
+    - ineffassign
+    - unused
+
+run:
+  timeout: 5m
+
+issues:
+  exclude-use-default: false
