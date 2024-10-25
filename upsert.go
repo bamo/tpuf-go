@@ -4,9 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io"
-	"net/http"
 )
 
 // Attributes represent a document's attributes.  Must be a json-marshalable type.
@@ -68,23 +67,10 @@ func (c *Client) upsert(ctx context.Context, namespace string, request *UpsertRe
 	}
 	defer resp.Body.Close()
 
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read response body: %w", err)
+	err = c.toApiError(resp)
+	var apiErr ApiError
+	if !errors.As(err, &apiErr) || apiErr.Status != ApiStatusOK {
+		return fmt.Errorf("upsert failed: %w", err)
 	}
-
-	var response ApiResponse
-	if err := json.Unmarshal(respBody, &response); err != nil {
-		return fmt.Errorf("failed to decode response: %w (raw response: %s, status code: %d)", err, string(respBody), resp.StatusCode)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code %d: %w", resp.StatusCode, response)
-	}
-
-	if response.Status != ApiStatusOK {
-		return fmt.Errorf("upsert failed: %w", response)
-	}
-
 	return nil
 }

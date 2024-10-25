@@ -4,6 +4,7 @@ package tpuf
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -20,15 +21,15 @@ type Client struct {
 	ApiToken string
 
 	// BaseURL is the base URL for all API endpoints.
-	// Defaults to https://api.turbopuffer.com/v1
+	// Defaults to https://api.turbopuffer.com
 	BaseURL string
 
 	// HttpClient is the HTTP client used for making requests.
-	// Defaults to defaultHttpClient.
+	// Defaults to &http.Client{}.
 	HttpClient HttpClient
 }
 
-var defaultBaseURL = "https://api.turbopuffer.com/v1"
+var defaultBaseURL = "https://api.turbopuffer.com"
 
 func (c *Client) baseURL() string {
 	if c.BaseURL == "" {
@@ -65,16 +66,28 @@ func (c *Client) do(ctx context.Context, method string, path string, body io.Rea
 	return c.httpClient().Do(req)
 }
 
-type ApiResponse struct {
-	Status string `json:"status"`
-	Err    string `json:"error"`
+func (c *Client) toApiError(resp *http.Response) error {
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read response body: %w", err)
+	}
+	apiErr := ApiError{
+		HttpStatus: resp.StatusCode,
+	}
+	if decodeErr := json.Unmarshal(respBody, &apiErr); decodeErr != nil {
+		return fmt.Errorf("failed to decode api error: %w (raw response: %s, status code: %d)", decodeErr, string(respBody), resp.StatusCode)
+	}
+	return apiErr
+}
+
+type ApiError struct {
+	Status     string `json:"status"`
+	Err        string `json:"error"`
+	HttpStatus int    `json:"-"`
 }
 
 const ApiStatusOK = "OK"
 
-func (r ApiResponse) Error() string {
-	if r.Err == "" {
-		return ""
-	}
-	return fmt.Sprintf("%s: %s", r.Status, r.Err)
+func (e ApiError) Error() string {
+	return fmt.Sprintf("%s: %s (HTTP %d)", e.Status, e.Err, e.HttpStatus)
 }
