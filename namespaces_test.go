@@ -119,3 +119,64 @@ func TestNamespaces(t *testing.T) {
 		})
 	}
 }
+
+func TestDeleteNamespace(t *testing.T) {
+	tests := []struct {
+		name           string
+		namespace      string
+		httpResponse   *http.Response
+		httpError      error
+		expectedError  string
+		expectedMethod string
+		expectedURL    string
+	}{
+		{
+			name:      "successful delete",
+			namespace: "test-namespace",
+			httpResponse: &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(bytes.NewBufferString(`{"status":"OK"}`)),
+			},
+			expectedMethod: http.MethodDelete,
+			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace",
+		},
+		{
+			name:      "delete failure",
+			namespace: "non-existent-namespace",
+			httpResponse: &http.Response{
+				StatusCode: http.StatusNotFound,
+				Body:       io.NopCloser(bytes.NewBufferString(`{"error":"Namespace not found","status":"error"}`)),
+			},
+			expectedError:  "delete namespace failed: error: Namespace not found (HTTP 404)",
+			expectedMethod: http.MethodDelete,
+			expectedURL:    "https://api.turbopuffer.com/v1/vectors/non-existent-namespace",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client := &tpuf.Client{
+				ApiToken: "test-token",
+				HttpClient: &fakeHttpClient{
+					doFunc: func(req *http.Request) (*http.Response, error) {
+						assert.Equal(t, tt.expectedMethod, req.Method, "unexpected request method")
+						assert.Equal(t, tt.expectedURL, req.URL.String(), "unexpected request URL")
+
+						assert.Equal(t, "Bearer test-token", req.Header.Get("Authorization"), "unexpected Authorization header")
+						assert.Equal(t, "application/json", req.Header.Get("Accept"), "unexpected Accept header")
+
+						return tt.httpResponse, tt.httpError
+					},
+				},
+			}
+
+			err := client.DeleteNamespace(context.Background(), tt.namespace)
+
+			if tt.expectedError == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.expectedError)
+			}
+		})
+	}
+}
