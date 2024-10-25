@@ -1,13 +1,21 @@
 linters:
   enable:
     - gofmt
-    - golint
+    - revive
     - govet
     - errcheck
     - staticcheck
     - gosimple
     - ineffassign
     - unused
+
+linters-settings:
+  revive:
+    rules:
+      - name: cyclomatic
+        arguments: [10]
+      - name: line-length-limit
+        arguments: [100]
 
 run:
   timeout: 5m
