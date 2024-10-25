@@ -3,7 +3,11 @@
 package tpuf
 
 import (
+	"context"
+	"fmt"
+	"io"
 	"net/http"
+	"net/url"
 )
 
 type HttpClient interface {
@@ -24,7 +28,53 @@ type Client struct {
 	HttpClient HttpClient
 }
 
-type ErrorReponse struct {
+var defaultBaseURL = "https://api.turbopuffer.com/v1"
+
+func (c *Client) baseURL() string {
+	if c.BaseURL == "" {
+		return defaultBaseURL
+	}
+	return c.BaseURL
+}
+
+var defaultHttpClient = &http.Client{}
+
+func (c *Client) httpClient() HttpClient {
+	if c.HttpClient == nil {
+		return defaultHttpClient
+	}
+	return c.HttpClient
+}
+
+func (c *Client) post(ctx context.Context, path string, body io.Reader) (*http.Response, error) {
+	return c.do(ctx, http.MethodPost, path, body)
+}
+
+func (c *Client) do(ctx context.Context, method string, path string, body io.Reader) (*http.Response, error) {
+	endpoint, err := url.JoinPath(c.baseURL(), path)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, method, endpoint, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+c.ApiToken)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	return c.httpClient().Do(req)
+}
+
+type ApiResponse struct {
 	Status string `json:"status"`
-	Error  string `json:"error"`
+	Err    string `json:"error"`
+}
+
+const ApiStatusOK = "OK"
+
+func (r ApiResponse) Error() string {
+	if r.Err == "" {
+		return ""
+	}
+	return fmt.Sprintf("%s: %s", r.Status, r.Err)
 }
