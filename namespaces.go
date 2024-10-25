@@ -70,3 +70,20 @@ func (c *Client) Namespaces(ctx context.Context, request *NamespacesRequest) (*N
 
 	return &response, nil
 }
+
+// DeleteNamespace deletes a namespace entirely, including all documents.
+// See https://turbopuffer.com/docs/delete-namespace for more details.
+func (c *Client) DeleteNamespace(ctx context.Context, namespace string) error {
+	path := fmt.Sprintf("/v1/vectors/%s", namespace)
+	resp, err := c.delete(ctx, path)
+	if err != nil {
+		return fmt.Errorf("http request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	err = c.toApiError(resp)
+	if err != nil {
+		return fmt.Errorf("delete namespace failed: %w", err)
+	}
+	return nil
+}
