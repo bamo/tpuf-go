@@ -69,7 +69,7 @@ func TestUpsert(t *testing.T) {
 			name:      "unsuccessful upsert",
 			namespace: "test-namespace",
 			request: &tpuf.UpsertRequest{
-				Upserts: []*tpuf.Upsert{{ID: "1"}},
+				Upserts: []*tpuf.Upsert{{ID: "1", Vector: []float32{0.1, 0.1}}},
 			},
 			httpResponse: &http.Response{
 				StatusCode: http.StatusBadRequest,
@@ -78,7 +78,7 @@ func TestUpsert(t *testing.T) {
 			expectedError:  "unexpected status code 400: error: 💔 invalid filter for key my_attr, only Eq/In/Lt/Lte/Gt/Gte/And/Or filters allowed currently for scanning",
 			expectedMethod: http.MethodPost,
 			expectedURL:    "https://api.turbopuffer.com/v1/v1/vectors/test-namespace",
-			expectedBody:   `{"upserts":[{"id":"1"}]}`,
+			expectedBody:   `{"upserts":[{"id":"1","vector":[0.1,0.1]}]}`,
 		},
 		{
 			name:           "http error",
@@ -89,6 +89,13 @@ func TestUpsert(t *testing.T) {
 			expectedMethod: http.MethodPost,
 			expectedURL:    "https://api.turbopuffer.com/v1/v1/vectors/test-namespace",
 			expectedBody:   `{}`,
+		},
+		{
+			name: "delete via upsert",
+			request: &tpuf.UpsertRequest{
+				Upserts: []*tpuf.Upsert{{ID: "1"}},
+			},
+			expectedError: "deletion must be performed using Delete, not Upsert to avoid accidental deletion",
 		},
 	}
 
