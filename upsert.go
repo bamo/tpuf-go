@@ -32,7 +32,18 @@ type UpsertRequest struct {
 // Upsert creates, updates or deletes documents in a namespace.
 // See https://turbopuffer.com/docs/upsert
 func (c *Client) Upsert(ctx context.Context, namespace string, request *UpsertRequest) error {
+	return c.upsert(ctx, namespace, request, false)
+}
+
+func (c *Client) upsert(ctx context.Context, namespace string, request *UpsertRequest, allowDelete bool) error {
 	url := fmt.Sprintf("/v1/vectors/%s", namespace)
+	if !allowDelete {
+		for _, upsert := range request.Upserts {
+			if len(upsert.Vector) == 0 {
+				return fmt.Errorf("deletion must be performed using Delete, not Upsert to avoid accidental deletion")
+			}
+		}
+	}
 	reqJson, err := json.Marshal(request)
 	if err != nil {
 		return fmt.Errorf("failed to marshal request: %w", err)
