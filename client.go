@@ -4,7 +4,6 @@ package tpuf
 
 import (
 	"bytes"
-	"compress/gzip"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -28,9 +27,6 @@ type Client struct {
 	// BaseURL is the base URL for all API endpoints.
 	// Defaults to https://api.turbopuffer.com
 	BaseURL string
-
-	// UseGzipEncoding enables gzip encoding for requests and responses.
-	UseGzipEncoding bool
 
 	// MaxRetries is the maximum number of times to retry a request if a retriable
 	// error is encountered.  Defaults to 6.
@@ -128,22 +124,9 @@ func (c *Client) doOnce(ctx context.Context, method string, reqUrl *url.URL, bod
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 
-	if c.UseGzipEncoding {
-		if err := c.maybeEncodeGzip(req); err != nil {
-			return nil, err
-		}
-	}
-
 	resp, err := c.httpClient().Do(req)
 	if err != nil {
 		return nil, err
-	}
-
-	if c.UseGzipEncoding {
-		if err := c.maybeDecodeGzip(resp); err != nil {
-			resp.Body.Close()
-			return nil, err
-		}
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -156,41 +139,6 @@ func (c *Client) doOnce(ctx context.Context, method string, reqUrl *url.URL, bod
 	}
 
 	return resp, nil
-}
-
-func (c *Client) maybeEncodeGzip(req *http.Request) error {
-	req.Header.Set("Accept-Encoding", "gzip")
-	if req.Body == nil {
-		return nil
-	}
-
-	var buf bytes.Buffer
-	gzipWriter := gzip.NewWriter(&buf)
-	bodyBytes, err := io.ReadAll(req.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read request body: %w", err)
-	}
-	if _, err := gzipWriter.Write(bodyBytes); err != nil {
-		return fmt.Errorf("failed to compress request body: %w", err)
-	}
-	if err := gzipWriter.Close(); err != nil {
-		return fmt.Errorf("failed to close gzip writer: %w", err)
-	}
-	req.Body = io.NopCloser(&buf)
-	req.Header.Set("Content-Encoding", "gzip")
-	return nil
-}
-
-func (c *Client) maybeDecodeGzip(resp *http.Response) error {
-	if resp.Header.Get("Content-Encoding") != "gzip" {
-		return nil
-	}
-	gzipReader, err := gzip.NewReader(resp.Body)
-	if err != nil {
-		return fmt.Errorf("failed to create gzip reader: %w", err)
-	}
-	resp.Body = gzipReader
-	return nil
 }
 
 func isRetriable(statusCode int) bool {
