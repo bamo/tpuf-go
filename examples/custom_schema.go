@@ -9,7 +9,7 @@ import (
 	"github.com/bamo/tpuf-go"
 )
 
-func UpsertWithSchema() error {
+func CustomSchema() error {
 	ctx := context.Background()
 	client := &tpuf.Client{
 		ApiToken: os.Getenv("TPUF_API_TOKEN"),
