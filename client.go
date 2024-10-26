@@ -82,7 +82,7 @@ func (c *Client) get(ctx context.Context, path string, values url.Values) (*http
 	return c.do(ctx, http.MethodGet, path, values, nil)
 }
 
-func (c *Client) post(ctx context.Context, path string, body io.Reader) (*http.Response, error) {
+func (c *Client) post(ctx context.Context, path string, body []byte) (*http.Response, error) {
 	return c.do(ctx, http.MethodPost, path, nil, body)
 }
 
@@ -90,7 +90,7 @@ func (c *Client) delete(ctx context.Context, path string) (*http.Response, error
 	return c.do(ctx, http.MethodDelete, path, nil, nil)
 }
 
-func (c *Client) do(ctx context.Context, method string, path string, values url.Values, body io.Reader) (*http.Response, error) {
+func (c *Client) do(ctx context.Context, method string, path string, values url.Values, body []byte) (*http.Response, error) {
 	endpoint, err := url.JoinPath(c.baseURL(), path)
 	if err != nil {
 		return nil, err
@@ -101,19 +101,11 @@ func (c *Client) do(ctx context.Context, method string, path string, values url.
 	}
 	reqUrl.RawQuery = values.Encode()
 
-	var bodyBytes []byte
-	if body != nil {
-		bodyBytes, err = io.ReadAll(body)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read request body: %w", err)
-		}
-	}
-
 	return backoff.RetryNotifyWithTimerAndData(
 		func() (*http.Response, error) {
 			var bodyToUse io.Reader
-			if bodyBytes != nil {
-				bodyToUse = bytes.NewReader(bodyBytes)
+			if len(body) > 0 {
+				bodyToUse = bytes.NewReader(body)
 			}
 			return c.doOnce(ctx, method, reqUrl, bodyToUse)
 		},

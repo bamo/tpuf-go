@@ -1,7 +1,6 @@
 package tpuf
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -27,7 +26,7 @@ func (c *Client) Recall(ctx context.Context, namespace string, request *RecallRe
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	resp, err := c.post(ctx, path, bytes.NewBuffer(reqJson))
+	resp, err := c.post(ctx, path, reqJson)
 	if err != nil {
 		return nil, fmt.Errorf("failed to perform recall: %w", err)
 	}

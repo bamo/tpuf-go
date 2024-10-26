@@ -1,7 +1,6 @@
 package tpuf
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -48,7 +47,7 @@ func (c *Client) Query(ctx context.Context, namespace string, request *QueryRequ
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	resp, err := c.post(ctx, path, bytes.NewBuffer(reqJson))
+	resp, err := c.post(ctx, path, reqJson)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query documents: %w", err)
 	}

@@ -6,7 +6,6 @@ import (
 	"context"
 	"io"
 	"net/http"
-	"strings"
 	"testing"
 	"time"
 
@@ -175,12 +174,7 @@ func TestClientDo(t *testing.T) {
 				method = http.MethodGet
 			}
 
-			var body io.Reader
-			if tt.requestBody != "" {
-				body = strings.NewReader(tt.requestBody)
-			}
-
-			_, err := client.do(context.Background(), method, "/test", nil, body)
+			_, err := client.do(context.Background(), method, "/test", nil, []byte(tt.requestBody))
 
 			assert.Equal(t, tt.expectedCalls, callCount, "unexpected number of calls")
 
@@ -354,7 +348,7 @@ func TestClientDoWithCompression(t *testing.T) {
 			var err error
 
 			if tt.method == http.MethodPost {
-				resp, err = client.do(context.Background(), tt.method, "/test", nil, strings.NewReader(tt.requestBody))
+				resp, err = client.do(context.Background(), tt.method, "/test", nil, []byte(tt.requestBody))
 			} else {
 				resp, err = client.do(context.Background(), tt.method, "/test", nil, nil)
 			}
