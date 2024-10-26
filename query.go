@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 )
 
@@ -60,13 +59,8 @@ func (c *Client) Query(ctx context.Context, namespace string, request *QueryRequ
 		return nil, fmt.Errorf("failed to query documents: %w", c.toApiError(resp))
 	}
 
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
-	}
-
 	var results []*QueryResult
-	if err := json.Unmarshal(respBody, &results); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&results); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
