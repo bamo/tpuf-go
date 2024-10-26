@@ -3,6 +3,8 @@
 package tpuf
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -27,9 +29,8 @@ type Client struct {
 	// Defaults to https://api.turbopuffer.com
 	BaseURL string
 
-	// HttpClient is the HTTP client used for making requests.
-	// Defaults to &http.Client{}.
-	HttpClient HttpClient
+	// UseGzipEncoding enables gzip encoding for requests and responses.
+	UseGzipEncoding bool
 
 	// MaxRetries is the maximum number of times to retry a request if a retriable
 	// error is encountered.  Defaults to 6.
@@ -38,6 +39,10 @@ type Client struct {
 
 	// DisableRetry disables retries for all requests.
 	DisableRetry bool
+
+	// HttpClient is the HTTP client used for making requests.
+	// Defaults to &http.Client{}.
+	HttpClient HttpClient
 
 	// Timer is the timer used for exponential backoff.
 	Timer backoff.Timer
@@ -96,29 +101,21 @@ func (c *Client) do(ctx context.Context, method string, path string, values url.
 	}
 	reqUrl.RawQuery = values.Encode()
 
+	var bodyBytes []byte
+	if body != nil {
+		bodyBytes, err = io.ReadAll(body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read request body: %w", err)
+		}
+	}
+
 	return backoff.RetryNotifyWithTimerAndData(
 		func() (*http.Response, error) {
-			req, err := http.NewRequestWithContext(ctx, method, reqUrl.String(), body)
-			if err != nil {
-				return nil, err
+			var bodyToUse io.Reader
+			if bodyBytes != nil {
+				bodyToUse = bytes.NewReader(bodyBytes)
 			}
-			req.Header.Set("Authorization", "Bearer "+c.ApiToken)
-			req.Header.Set("Content-Type", "application/json")
-			req.Header.Set("Accept", "application/json")
-
-			resp, err := c.httpClient().Do(req)
-			if err != nil {
-				return nil, err
-			}
-			if resp.StatusCode != http.StatusOK {
-				apiErr := c.toApiError(resp)
-				resp.Body.Close()
-				if !isRetriable(resp.StatusCode) {
-					return nil, backoff.Permanent(apiErr)
-				}
-				return nil, apiErr
-			}
-			return resp, nil
+			return c.doOnce(ctx, method, reqUrl, bodyToUse)
 		},
 		backoff.WithMaxRetries(backoff.NewExponentialBackOff(
 			backoff.WithInitialInterval(2*time.Second),
@@ -128,6 +125,60 @@ func (c *Client) do(ctx context.Context, method string, path string, values url.
 		nil,
 		c.Timer,
 	)
+}
+
+func (c *Client) doOnce(ctx context.Context, method string, reqUrl *url.URL, body io.Reader) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, method, reqUrl.String(), body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+c.ApiToken)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	// Add gzip encoding for requests if enabled
+	if c.UseGzipEncoding {
+		req.Header.Set("Accept-Encoding", "gzip")
+		if body != nil {
+			var buf bytes.Buffer
+			gzipWriter := gzip.NewWriter(&buf)
+			_, err := io.Copy(gzipWriter, body)
+			if err != nil {
+				return nil, fmt.Errorf("failed to compress request body: %w", err)
+			}
+			if err := gzipWriter.Close(); err != nil {
+				return nil, fmt.Errorf("failed to close gzip writer: %w", err)
+			}
+			req.Body = io.NopCloser(&buf)
+			req.Header.Set("Content-Encoding", "gzip")
+		}
+	}
+
+	resp, err := c.httpClient().Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	// Handle gzip-encoded responses if enabled
+	if c.UseGzipEncoding && resp.Header.Get("Content-Encoding") == "gzip" {
+		gzipReader, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			resp.Body.Close()
+			return nil, fmt.Errorf("failed to create gzip reader: %w", err)
+		}
+		resp.Body = gzipReader
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		apiErr := c.toApiError(resp)
+		resp.Body.Close()
+		if !isRetriable(resp.StatusCode) {
+			return nil, backoff.Permanent(apiErr)
+		}
+		return nil, apiErr
+	}
+
+	return resp, nil
 }
 
 func isRetriable(statusCode int) bool {
