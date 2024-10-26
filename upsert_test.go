@@ -102,7 +102,8 @@ func TestUpsert(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			client := &tpuf.Client{
-				ApiToken: "test-token",
+				DisableRetry: true,
+				ApiToken:     "test-token",
 				HttpClient: &fakeHttpClient{
 					doFunc: func(req *http.Request) (*http.Response, error) {
 						assert.Equal(t, tt.expectedMethod, req.Method)
