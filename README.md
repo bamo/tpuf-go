@@ -135,8 +135,14 @@ if err != nil {
 
 ## More Information
 
+For more example code, see the [examples](./examples) directory.
+
 For more detailed information about the available methods and their parameters, please refer to the package documentation and the [Turbopuffer API documentation](https://turbopuffer.com/docs).
 
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for details.
+
+## Contributing
+
+You are more than welcome to contribute to this project.  Feel free to open issues or submit pull requests.  We are still working on further contribution guidelines.
