@@ -46,14 +46,13 @@ func (c *Client) Namespaces(ctx context.Context, request *NamespacesRequest) (*N
 		params.Set("cursor", string(request.Cursor))
 	}
 
-	resp, err := c.get(ctx, path, params)
+	respData, err := c.get(ctx, path, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list namespaces: %w", err)
 	}
-	defer resp.Body.Close()
 
 	var response NamespacesResponse
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+	if err := json.Unmarshal(respData, &response); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
@@ -64,11 +63,10 @@ func (c *Client) Namespaces(ctx context.Context, request *NamespacesRequest) (*N
 // See https://turbopuffer.com/docs/delete-namespace for more details.
 func (c *Client) DeleteNamespace(ctx context.Context, namespace string) error {
 	path := fmt.Sprintf("/v1/vectors/%s", namespace)
-	resp, err := c.delete(ctx, path)
+	_, err := c.delete(ctx, path)
 	if err != nil {
 		return fmt.Errorf("failed to delete namespace: %w", err)
 	}
-	defer resp.Body.Close()
 
 	return nil
 }

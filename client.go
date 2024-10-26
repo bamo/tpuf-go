@@ -4,7 +4,6 @@ package tpuf
 
 import (
 	"bytes"
-	"compress/gzip"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -28,9 +27,6 @@ type Client struct {
 	// BaseURL is the base URL for all API endpoints.
 	// Defaults to https://api.turbopuffer.com
 	BaseURL string
-
-	// UseGzipEncoding enables gzip encoding for requests and responses.
-	UseGzipEncoding bool
 
 	// MaxRetries is the maximum number of times to retry a request if a retriable
 	// error is encountered.  Defaults to 6.
@@ -78,19 +74,19 @@ func (c *Client) maxRetries() int {
 	return c.MaxRetries
 }
 
-func (c *Client) get(ctx context.Context, path string, values url.Values) (*http.Response, error) {
+func (c *Client) get(ctx context.Context, path string, values url.Values) ([]byte, error) {
 	return c.do(ctx, http.MethodGet, path, values, nil)
 }
 
-func (c *Client) post(ctx context.Context, path string, body io.Reader) (*http.Response, error) {
+func (c *Client) post(ctx context.Context, path string, body []byte) ([]byte, error) {
 	return c.do(ctx, http.MethodPost, path, nil, body)
 }
 
-func (c *Client) delete(ctx context.Context, path string) (*http.Response, error) {
+func (c *Client) delete(ctx context.Context, path string) ([]byte, error) {
 	return c.do(ctx, http.MethodDelete, path, nil, nil)
 }
 
-func (c *Client) do(ctx context.Context, method string, path string, values url.Values, body io.Reader) (*http.Response, error) {
+func (c *Client) do(ctx context.Context, method string, path string, values url.Values, body []byte) ([]byte, error) {
 	endpoint, err := url.JoinPath(c.baseURL(), path)
 	if err != nil {
 		return nil, err
@@ -101,19 +97,11 @@ func (c *Client) do(ctx context.Context, method string, path string, values url.
 	}
 	reqUrl.RawQuery = values.Encode()
 
-	var bodyBytes []byte
-	if body != nil {
-		bodyBytes, err = io.ReadAll(body)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read request body: %w", err)
-		}
-	}
-
 	return backoff.RetryNotifyWithTimerAndData(
-		func() (*http.Response, error) {
+		func() ([]byte, error) {
 			var bodyToUse io.Reader
-			if bodyBytes != nil {
-				bodyToUse = bytes.NewReader(bodyBytes)
+			if len(body) > 0 {
+				bodyToUse = bytes.NewReader(body)
 			}
 			return c.doOnce(ctx, method, reqUrl, bodyToUse)
 		},
@@ -127,7 +115,7 @@ func (c *Client) do(ctx context.Context, method string, path string, values url.
 	)
 }
 
-func (c *Client) doOnce(ctx context.Context, method string, reqUrl *url.URL, body io.Reader) (*http.Response, error) {
+func (c *Client) doOnce(ctx context.Context, method string, reqUrl *url.URL, body io.Reader) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, method, reqUrl.String(), body)
 	if err != nil {
 		return nil, err
@@ -136,69 +124,21 @@ func (c *Client) doOnce(ctx context.Context, method string, reqUrl *url.URL, bod
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 
-	if c.UseGzipEncoding {
-		if err := c.maybeEncodeGzip(req); err != nil {
-			return nil, err
-		}
-	}
-
 	resp, err := c.httpClient().Do(req)
 	if err != nil {
 		return nil, err
 	}
-
-	if c.UseGzipEncoding {
-		if err := c.maybeDecodeGzip(resp); err != nil {
-			resp.Body.Close()
-			return nil, err
-		}
-	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		apiErr := c.toApiError(resp)
-		resp.Body.Close()
 		if !isRetriable(resp.StatusCode) {
 			return nil, backoff.Permanent(apiErr)
 		}
 		return nil, apiErr
 	}
 
-	return resp, nil
-}
-
-func (c *Client) maybeEncodeGzip(req *http.Request) error {
-	req.Header.Set("Accept-Encoding", "gzip")
-	if req.Body == nil {
-		return nil
-	}
-
-	var buf bytes.Buffer
-	gzipWriter := gzip.NewWriter(&buf)
-	bodyBytes, err := io.ReadAll(req.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read request body: %w", err)
-	}
-	if _, err := gzipWriter.Write(bodyBytes); err != nil {
-		return fmt.Errorf("failed to compress request body: %w", err)
-	}
-	if err := gzipWriter.Close(); err != nil {
-		return fmt.Errorf("failed to close gzip writer: %w", err)
-	}
-	req.Body = io.NopCloser(&buf)
-	req.Header.Set("Content-Encoding", "gzip")
-	return nil
-}
-
-func (c *Client) maybeDecodeGzip(resp *http.Response) error {
-	if resp.Header.Get("Content-Encoding") != "gzip" {
-		return nil
-	}
-	gzipReader, err := gzip.NewReader(resp.Body)
-	if err != nil {
-		return fmt.Errorf("failed to create gzip reader: %w", err)
-	}
-	resp.Body = gzipReader
-	return nil
+	return io.ReadAll(resp.Body)
 }
 
 func isRetriable(statusCode int) bool {

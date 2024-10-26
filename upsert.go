@@ -1,7 +1,6 @@
 package tpuf
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -60,11 +59,10 @@ func (c *Client) upsert(ctx context.Context, namespace string, request *UpsertRe
 	if err != nil {
 		return fmt.Errorf("failed to marshal request: %w", err)
 	}
-	resp, err := c.post(ctx, path, bytes.NewBuffer(reqJson))
+	_, err = c.post(ctx, path, reqJson)
 	if err != nil {
 		return fmt.Errorf("failed to upsert documents: %w", err)
 	}
-	defer resp.Body.Close()
 
 	return nil
 }

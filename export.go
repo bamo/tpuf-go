@@ -25,14 +25,13 @@ func (c *Client) Export(ctx context.Context, namespace string, cursor string) (*
 		params.Set("cursor", string(cursor))
 	}
 
-	resp, err := c.get(ctx, path, params)
+	respData, err := c.get(ctx, path, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to export documents: %w", err)
 	}
-	defer resp.Body.Close()
 
 	var exportResp ExportResponse
-	if err := json.NewDecoder(resp.Body).Decode(&exportResp); err != nil {
+	if err := json.Unmarshal(respData, &exportResp); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
