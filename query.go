@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 )
 
 type QueryRequest struct {
@@ -54,10 +53,6 @@ func (c *Client) Query(ctx context.Context, namespace string, request *QueryRequ
 		return nil, fmt.Errorf("failed to query documents: %w", err)
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to query documents: %w", c.toApiError(resp))
-	}
 
 	var results []*QueryResult
 	if err := json.NewDecoder(resp.Body).Decode(&results); err != nil {

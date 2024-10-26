@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/url"
 )
 
@@ -31,15 +30,6 @@ func (c *Client) Export(ctx context.Context, namespace string, cursor string) (*
 		return nil, fmt.Errorf("failed to export documents: %w", err)
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusAccepted {
-		// TODO: handle retries.
-		return nil, fmt.Errorf("export data not ready, retry after a few seconds")
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to export documents: %w", c.toApiError(resp))
-	}
 
 	var exportResp ExportResponse
 	if err := json.NewDecoder(resp.Body).Decode(&exportResp); err != nil {

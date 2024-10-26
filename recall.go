@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 )
 
 type RecallRequest struct {
@@ -33,10 +32,6 @@ func (c *Client) Recall(ctx context.Context, namespace string, request *RecallRe
 		return nil, fmt.Errorf("failed to query documents: %w", err)
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to perform recall: %w", c.toApiError(resp))
-	}
 
 	var response RecallResponse
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {

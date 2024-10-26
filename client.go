@@ -77,7 +77,17 @@ func (c *Client) do(ctx context.Context, method string, path string, values url.
 	req.Header.Set("Authorization", "Bearer "+c.ApiToken)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	return c.httpClient().Do(req)
+	resp, err := c.httpClient().Do(req)
+	if err != nil {
+		return nil, err
+	}
+	// Convert HTTP 4XX and 5XX errors to API errors, and return them that way.
+	if resp.StatusCode != http.StatusOK {
+		apiErr := c.toApiError(resp)
+		resp.Body.Close()
+		return nil, apiErr
+	}
+	return resp, nil
 }
 
 func (c *Client) toApiError(resp *http.Response) error {
