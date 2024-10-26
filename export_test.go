@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/bamo/tpuf-go"
 	"github.com/stretchr/testify/assert"
@@ -17,8 +18,8 @@ func TestExport(t *testing.T) {
 		name           string
 		namespace      string
 		cursor         string
-		httpResponse   *http.Response
-		httpError      error
+		httpResponses  []*http.Response
+		httpErrors     []error
 		expectedError  string
 		expectedMethod string
 		expectedURL    string
@@ -28,17 +29,19 @@ func TestExport(t *testing.T) {
 			name:      "successful export without cursor",
 			namespace: "test-namespace",
 			cursor:    "",
-			httpResponse: &http.Response{
-				StatusCode: http.StatusOK,
-				Body: io.NopCloser(bytes.NewBufferString(`{
-					"ids": ["1", "2"],
-					"vectors": [[0.1, 0.1], [0.2, 0.2]],
-					"attributes": {
-						"key1": ["one", "two"],
-						"key2": ["a", "b"]
-					},
-					"next_cursor": "eyJmaWxlX2lkIjoxMTMzfQ"
-				}`)),
+			httpResponses: []*http.Response{
+				{
+					StatusCode: http.StatusOK,
+					Body: io.NopCloser(bytes.NewBufferString(`{
+						"ids": ["1", "2"],
+						"vectors": [[0.1, 0.1], [0.2, 0.2]],
+						"attributes": {
+							"key1": ["one", "two"],
+							"key2": ["a", "b"]
+						},
+						"next_cursor": "eyJmaWxlX2lkIjoxMTMzfQ"
+					}`)),
+				},
 			},
 			expectedMethod: http.MethodGet,
 			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace",
@@ -56,17 +59,19 @@ func TestExport(t *testing.T) {
 			name:      "successful export with cursor",
 			namespace: "test-namespace",
 			cursor:    "eyJmaWxlX2lkIjoxMTMzfQ",
-			httpResponse: &http.Response{
-				StatusCode: http.StatusOK,
-				Body: io.NopCloser(bytes.NewBufferString(`{
-					"ids": ["3", "4"],
-					"vectors": [[0.3, 0.3], [0.4, 0.4]],
-					"attributes": {
-						"key1": ["three", "four"],
-						"key2": ["c", "d"]
-					},
-					"next_cursor": ""
-				}`)),
+			httpResponses: []*http.Response{
+				{
+					StatusCode: http.StatusOK,
+					Body: io.NopCloser(bytes.NewBufferString(`{
+						"ids": ["3", "4"],
+						"vectors": [[0.3, 0.3], [0.4, 0.4]],
+						"attributes": {
+							"key1": ["three", "four"],
+							"key2": ["c", "d"]
+						},
+						"next_cursor": ""
+					}`)),
+				},
 			},
 			expectedMethod: http.MethodGet,
 			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace?cursor=eyJmaWxlX2lkIjoxMTMzfQ",
@@ -81,24 +86,52 @@ func TestExport(t *testing.T) {
 			},
 		},
 		{
-			name:      "export not ready",
+			name:      "export not ready then success",
 			namespace: "test-namespace",
 			cursor:    "",
-			httpResponse: &http.Response{
-				StatusCode: http.StatusAccepted,
-				Body:       io.NopCloser(bytes.NewBufferString(`{}`)),
+			httpResponses: []*http.Response{
+				{
+					StatusCode: http.StatusAccepted,
+					Body:       io.NopCloser(bytes.NewBufferString(`{}`)),
+				},
+				{
+					StatusCode: http.StatusAccepted,
+					Body:       io.NopCloser(bytes.NewBufferString(`{}`)),
+				},
+				{
+					StatusCode: http.StatusOK,
+					Body: io.NopCloser(bytes.NewBufferString(`{
+						"ids": ["5", "6"],
+						"vectors": [[0.5, 0.5], [0.6, 0.6]],
+						"attributes": {
+							"key1": ["five", "six"],
+							"key2": ["e", "f"]
+						},
+						"next_cursor": ""
+					}`)),
+				},
 			},
-			expectedError:  "export data not ready, retry after a few seconds",
 			expectedMethod: http.MethodGet,
 			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace",
+			expectedResult: &tpuf.ExportResponse{
+				IDs:     []string{"5", "6"},
+				Vectors: [][]float32{{0.5, 0.5}, {0.6, 0.6}},
+				Attributes: map[string][]json.RawMessage{
+					"key1": {json.RawMessage(`"five"`), json.RawMessage(`"six"`)},
+					"key2": {json.RawMessage(`"e"`), json.RawMessage(`"f"`)},
+				},
+				NextCursor: "",
+			},
 		},
 		{
 			name:      "export error",
 			namespace: "test-namespace",
 			cursor:    "",
-			httpResponse: &http.Response{
-				StatusCode: http.StatusBadRequest,
-				Body:       io.NopCloser(bytes.NewBufferString(`{"error":"Invalid request","status":"error"}`)),
+			httpResponses: []*http.Response{
+				{
+					StatusCode: http.StatusBadRequest,
+					Body:       io.NopCloser(bytes.NewBufferString(`{"error":"Invalid request","status":"error"}`)),
+				},
 			},
 			expectedError:  "failed to export documents: error: Invalid request (HTTP 400)",
 			expectedMethod: http.MethodGet,
@@ -108,19 +141,27 @@ func TestExport(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			fakeTimer := &fakeTimer{}
+			requestCount := 0
 			client := &tpuf.Client{
 				ApiToken: "test-token",
 				HttpClient: &fakeHttpClient{
 					doFunc: func(req *http.Request) (*http.Response, error) {
 						assert.Equal(t, tt.expectedMethod, req.Method, "unexpected request method")
 						assert.Equal(t, tt.expectedURL, req.URL.String(), "unexpected request URL")
-
 						assert.Equal(t, "Bearer test-token", req.Header.Get("Authorization"), "unexpected Authorization header")
 						assert.Equal(t, "application/json", req.Header.Get("Accept"), "unexpected Accept header")
 
-						return tt.httpResponse, tt.httpError
+						response := tt.httpResponses[requestCount]
+						var err error
+						if requestCount < len(tt.httpErrors) {
+							err = tt.httpErrors[requestCount]
+						}
+						requestCount++
+						return response, err
 					},
 				},
+				Timer: fakeTimer,
 			}
 
 			result, err := client.Export(context.Background(), tt.namespace, tt.cursor)
@@ -134,4 +175,25 @@ func TestExport(t *testing.T) {
 			}
 		})
 	}
+}
+
+type fakeTimer struct {
+	ch chan time.Time
+}
+
+func (f *fakeTimer) Start(duration time.Duration) {
+	if f.ch == nil {
+		f.ch = make(chan time.Time, 1)
+	}
+	f.ch <- time.Now()
+}
+
+func (f *fakeTimer) Stop() {
+	if f.ch != nil {
+		close(f.ch)
+	}
+}
+
+func (f *fakeTimer) C() <-chan time.Time {
+	return f.ch
 }

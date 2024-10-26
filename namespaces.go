@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/url"
 	"strconv"
 )
@@ -53,10 +52,6 @@ func (c *Client) Namespaces(ctx context.Context, request *NamespacesRequest) (*N
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to list namespaces: %w", c.toApiError(resp))
-	}
-
 	var response NamespacesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
@@ -71,13 +66,9 @@ func (c *Client) DeleteNamespace(ctx context.Context, namespace string) error {
 	path := fmt.Sprintf("/v1/vectors/%s", namespace)
 	resp, err := c.delete(ctx, path)
 	if err != nil {
-		return fmt.Errorf("http request failed: %w", err)
+		return fmt.Errorf("failed to delete namespace: %w", err)
 	}
 	defer resp.Body.Close()
 
-	err = c.toApiError(resp)
-	if err != nil {
-		return fmt.Errorf("delete namespace failed: %w", err)
-	}
 	return nil
 }

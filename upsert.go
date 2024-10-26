@@ -62,13 +62,9 @@ func (c *Client) upsert(ctx context.Context, namespace string, request *UpsertRe
 	}
 	resp, err := c.post(ctx, path, bytes.NewBuffer(reqJson))
 	if err != nil {
-		return fmt.Errorf("http request failed: %w", err)
+		return fmt.Errorf("failed to upsert documents: %w", err)
 	}
 	defer resp.Body.Close()
 
-	err = c.toApiError(resp)
-	if err != nil {
-		return fmt.Errorf("upsert failed: %w", err)
-	}
 	return nil
 }

@@ -75,7 +75,7 @@ func TestUpsert(t *testing.T) {
 				StatusCode: http.StatusBadRequest,
 				Body:       io.NopCloser(bytes.NewBufferString(`{"error":"💔 invalid filter for key my_attr, only Eq/In/Lt/Lte/Gt/Gte/And/Or filters allowed currently for scanning","status":"error"}`)),
 			},
-			expectedError:  "upsert failed: error: 💔 invalid filter for key my_attr, only Eq/In/Lt/Lte/Gt/Gte/And/Or filters allowed currently for scanning (HTTP 400)",
+			expectedError:  "failed to upsert documents: error: 💔 invalid filter for key my_attr, only Eq/In/Lt/Lte/Gt/Gte/And/Or filters allowed currently for scanning (HTTP 400)",
 			expectedMethod: http.MethodPost,
 			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace",
 			expectedBody:   `{"upserts":[{"id":"1","vector":[0.1,0.1]}]}`,
@@ -85,7 +85,7 @@ func TestUpsert(t *testing.T) {
 			namespace:      "test-namespace",
 			request:        &tpuf.UpsertRequest{},
 			httpError:      &url.Error{Op: "Post", URL: "https://api.turbopuffer.com/v1/v1/vectors/test-namespace", Err: io.EOF},
-			expectedError:  "http request failed: Post \"https://api.turbopuffer.com/v1/v1/vectors/test-namespace\": EOF",
+			expectedError:  "failed to upsert documents: Post \"https://api.turbopuffer.com/v1/v1/vectors/test-namespace\": EOF",
 			expectedMethod: http.MethodPost,
 			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace",
 			expectedBody:   `{}`,
@@ -102,7 +102,8 @@ func TestUpsert(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			client := &tpuf.Client{
-				ApiToken: "test-token",
+				DisableRetry: true,
+				ApiToken:     "test-token",
 				HttpClient: &fakeHttpClient{
 					doFunc: func(req *http.Request) (*http.Response, error) {
 						assert.Equal(t, tt.expectedMethod, req.Method)
@@ -163,7 +164,7 @@ func TestDelete(t *testing.T) {
 				StatusCode: http.StatusBadRequest,
 				Body:       io.NopCloser(bytes.NewBufferString(`{"error":"Invalid request","status":"error"}`)),
 			},
-			expectedError:  "upsert failed: error: Invalid request (HTTP 400)",
+			expectedError:  "failed to upsert documents: error: Invalid request (HTTP 400)",
 			expectedMethod: http.MethodPost,
 			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace",
 			expectedBody:   `{"upserts":[{"id":"4"},{"id":"5"}]}`,
