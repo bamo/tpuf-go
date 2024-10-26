@@ -74,19 +74,19 @@ func (c *Client) maxRetries() int {
 	return c.MaxRetries
 }
 
-func (c *Client) get(ctx context.Context, path string, values url.Values) (*http.Response, error) {
+func (c *Client) get(ctx context.Context, path string, values url.Values) ([]byte, error) {
 	return c.do(ctx, http.MethodGet, path, values, nil)
 }
 
-func (c *Client) post(ctx context.Context, path string, body []byte) (*http.Response, error) {
+func (c *Client) post(ctx context.Context, path string, body []byte) ([]byte, error) {
 	return c.do(ctx, http.MethodPost, path, nil, body)
 }
 
-func (c *Client) delete(ctx context.Context, path string) (*http.Response, error) {
+func (c *Client) delete(ctx context.Context, path string) ([]byte, error) {
 	return c.do(ctx, http.MethodDelete, path, nil, nil)
 }
 
-func (c *Client) do(ctx context.Context, method string, path string, values url.Values, body []byte) (*http.Response, error) {
+func (c *Client) do(ctx context.Context, method string, path string, values url.Values, body []byte) ([]byte, error) {
 	endpoint, err := url.JoinPath(c.baseURL(), path)
 	if err != nil {
 		return nil, err
@@ -98,7 +98,7 @@ func (c *Client) do(ctx context.Context, method string, path string, values url.
 	reqUrl.RawQuery = values.Encode()
 
 	return backoff.RetryNotifyWithTimerAndData(
-		func() (*http.Response, error) {
+		func() ([]byte, error) {
 			var bodyToUse io.Reader
 			if len(body) > 0 {
 				bodyToUse = bytes.NewReader(body)
@@ -115,7 +115,7 @@ func (c *Client) do(ctx context.Context, method string, path string, values url.
 	)
 }
 
-func (c *Client) doOnce(ctx context.Context, method string, reqUrl *url.URL, body io.Reader) (*http.Response, error) {
+func (c *Client) doOnce(ctx context.Context, method string, reqUrl *url.URL, body io.Reader) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, method, reqUrl.String(), body)
 	if err != nil {
 		return nil, err
@@ -128,17 +128,17 @@ func (c *Client) doOnce(ctx context.Context, method string, reqUrl *url.URL, bod
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		apiErr := c.toApiError(resp)
-		resp.Body.Close()
 		if !isRetriable(resp.StatusCode) {
 			return nil, backoff.Permanent(apiErr)
 		}
 		return nil, apiErr
 	}
 
-	return resp, nil
+	return io.ReadAll(resp.Body)
 }
 
 func isRetriable(statusCode int) bool {

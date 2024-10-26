@@ -26,14 +26,13 @@ func (c *Client) Recall(ctx context.Context, namespace string, request *RecallRe
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	resp, err := c.post(ctx, path, reqJson)
+	respData, err := c.post(ctx, path, reqJson)
 	if err != nil {
 		return nil, fmt.Errorf("failed to perform recall: %w", err)
 	}
-	defer resp.Body.Close()
 
 	var response RecallResponse
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+	if err := json.Unmarshal(respData, &response); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 	return &response, nil

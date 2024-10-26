@@ -47,14 +47,13 @@ func (c *Client) Query(ctx context.Context, namespace string, request *QueryRequ
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	resp, err := c.post(ctx, path, reqJson)
+	respData, err := c.post(ctx, path, reqJson)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query documents: %w", err)
 	}
-	defer resp.Body.Close()
 
 	var results []*QueryResult
-	if err := json.NewDecoder(resp.Body).Decode(&results); err != nil {
+	if err := json.Unmarshal(respData, &results); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
