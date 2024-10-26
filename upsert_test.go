@@ -164,7 +164,7 @@ func TestDelete(t *testing.T) {
 				StatusCode: http.StatusBadRequest,
 				Body:       io.NopCloser(bytes.NewBufferString(`{"error":"Invalid request","status":"error"}`)),
 			},
-			expectedError:  "failed to delete documents: error: Invalid request (HTTP 400)",
+			expectedError:  "failed to upsert documents: error: Invalid request (HTTP 400)",
 			expectedMethod: http.MethodPost,
 			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace",
 			expectedBody:   `{"upserts":[{"id":"4"},{"id":"5"}]}`,
