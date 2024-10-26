@@ -66,7 +66,7 @@ func (c *Client) DeleteNamespace(ctx context.Context, namespace string) error {
 	path := fmt.Sprintf("/v1/vectors/%s", namespace)
 	resp, err := c.delete(ctx, path)
 	if err != nil {
-		return fmt.Errorf("http request failed: %w", err)
+		return fmt.Errorf("failed to delete namespace: %w", err)
 	}
 	defer resp.Body.Close()
 

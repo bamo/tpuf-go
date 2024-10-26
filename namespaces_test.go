@@ -147,7 +147,7 @@ func TestDeleteNamespace(t *testing.T) {
 				StatusCode: http.StatusNotFound,
 				Body:       io.NopCloser(bytes.NewBufferString(`{"error":"Namespace not found","status":"error"}`)),
 			},
-			expectedError:  "delete namespace failed: error: Namespace not found (HTTP 404)",
+			expectedError:  "failed to delete namespace: error: Namespace not found (HTTP 404)",
 			expectedMethod: http.MethodDelete,
 			expectedURL:    "https://api.turbopuffer.com/v1/vectors/non-existent-namespace",
 		},
