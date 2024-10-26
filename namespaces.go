@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -58,13 +57,8 @@ func (c *Client) Namespaces(ctx context.Context, request *NamespacesRequest) (*N
 		return nil, fmt.Errorf("failed to list namespaces: %w", c.toApiError(resp))
 	}
 
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
-	}
-
 	var response NamespacesResponse
-	if err := json.Unmarshal(respBody, &response); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
