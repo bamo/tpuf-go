@@ -9,13 +9,17 @@ import (
 	"github.com/bamo/tpuf-go"
 )
 
-func CustomSchema() error {
+/**
+ * In this example, we create a namespace with a custom schema and upsert some documents.
+ * We then use a query to retrieve documents from the index, and deserialize the attributes.
+ *
+ * This example is runnable as-is, but you'll need to set the TPUF_API_TOKEN environment variable.
+ */
+func UpsertAndQueryWithCustomSchema(namespace string) error {
 	ctx := context.Background()
 	client := &tpuf.Client{
 		ApiToken: os.Getenv("TPUF_API_TOKEN"),
 	}
-
-	namespace := "my-test-namespace"
 
 	// First, we define the schema for this namespace
 	schema := tpuf.Schema{
@@ -94,6 +98,7 @@ func CustomSchema() error {
 	fmt.Println("Space colonies upserted successfully with custom schema")
 
 	// Now, query the space colonies
+	// In reality, you would use your favorite embedding model here.
 	generateEmbedding := func(text string) ([]float32, error) {
 		return []float32{0.1, 0.2, 0.3, 0.4}, nil
 	}
@@ -116,7 +121,7 @@ func CustomSchema() error {
 	}
 
 	for _, result := range results {
-		fmt.Printf("Colony: %s\n", result.ID)
+		fmt.Printf("Colony: %s (distance: %f)\n", result.ID, result.Dist)
 		// We can unmarshal the attributes into our structured format.
 		var attrs ColonyAttrs
 		if err := json.Unmarshal(result.Attributes, &attrs); err != nil {

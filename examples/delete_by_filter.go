@@ -9,13 +9,90 @@ import (
 	"github.com/bamo/tpuf-go"
 )
 
-func DeleteByFilter() error {
+/**
+ * Here we use a filter-only query combined with pagination to delete documents matching a given
+ * filter from an index.
+ *
+ * This example is runnable as-is, but you'll need to set the TPUF_API_TOKEN environment variable.
+ */
+func DeleteByFilter(namespace string) error {
 	ctx := context.Background()
 	client := &tpuf.Client{
 		ApiToken: os.Getenv("TPUF_API_TOKEN"),
 	}
 
-	namespace := "my-test-namespace"
+	// First, upsert some documents, including some incriminating evidence.
+	type DocAttrs struct {
+		Category    string `json:"category"`
+		Title       string `json:"title"`
+		Description string `json:"description"`
+	}
+
+	docs := []*tpuf.Upsert{
+		{
+			ID:     "doc1",
+			Vector: []float32{0.1, 0.2, 0.3},
+			Attributes: DocAttrs{
+				Category:    "incriminating",
+				Title:       "Secret Meeting Notes",
+				Description: "Details of the midnight cheese heist",
+			},
+		},
+		{
+			ID:     "doc2",
+			Vector: []float32{0.2, 0.3, 0.4},
+			Attributes: DocAttrs{
+				Category:    "incriminating",
+				Title:       "Hidden Account Numbers",
+				Description: "Offshore moon cheese accounts",
+			},
+		},
+		{
+			ID:     "doc3",
+			Vector: []float32{0.3, 0.4, 0.5},
+			Attributes: DocAttrs{
+				Category:    "incriminating",
+				Title:       "Operation Cheddar",
+				Description: "Plans for the dairy domination scheme",
+			},
+		},
+		{
+			ID:     "doc4",
+			Vector: []float32{0.4, 0.5, 0.6},
+			Attributes: DocAttrs{
+				Category:    "normal",
+				Title:       "Grocery List",
+				Description: "Just regular groceries",
+			},
+		},
+		{
+			ID:     "doc5",
+			Vector: []float32{0.5, 0.6, 0.7},
+			Attributes: DocAttrs{
+				Category:    "normal",
+				Title:       "Weekend Plans",
+				Description: "Normal weekend activities",
+			},
+		},
+	}
+
+	err := client.Upsert(ctx, namespace, &tpuf.UpsertRequest{
+		Schema: tpuf.Schema{
+			"category": &tpuf.Attribute{
+				Type: tpuf.AttributeTypeString,
+			},
+			"title": &tpuf.Attribute{
+				Type: tpuf.AttributeTypeString,
+			},
+			"description": &tpuf.Attribute{
+				Type: tpuf.AttributeTypeString,
+			},
+		},
+		Upserts: docs,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to upsert documents: %w", err)
+	}
 
 	// Define a filter to delete incriminating evidence
 	baseFilter := &tpuf.BaseFilter{
@@ -26,7 +103,7 @@ func DeleteByFilter() error {
 
 	var filter tpuf.Filter = baseFilter
 
-	pageSize := 1000
+	pageSize := 2
 	deletedCount := 0
 
 	for {
@@ -75,7 +152,18 @@ func DeleteByFilter() error {
 			},
 		}
 	}
-
 	fmt.Printf("Deletion complete. Total documents deleted: %d\n", deletedCount)
+
+	results, err := client.Query(ctx, namespace, &tpuf.QueryRequest{
+		TopK:              1000,
+		IncludeAttributes: true,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to query documents: %w", err)
+	}
+	fmt.Printf("Remaining documents:\n")
+	for _, result := range results {
+		fmt.Printf("%s\n", string(result.Attributes))
+	}
 	return nil
 }
