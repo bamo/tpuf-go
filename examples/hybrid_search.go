@@ -8,13 +8,18 @@ import (
 	"github.com/bamo/tpuf-go"
 )
 
-func HybridSearch() error {
+/**
+ * This is an example of hybrid search using a combination of keyword search and semantic search.
+ *
+ * This example is missing some important parts, including populating the index, generating embeddings,
+ * and reranking the results.  You'll need to fill in those parts to actually do hybrid search,
+ * but this should get you started.
+ */
+func HybridSearch(namespace string) error {
 	ctx := context.Background()
 	client := &tpuf.Client{
 		ApiToken: os.Getenv("TPUF_API_TOKEN"),
 	}
-
-	namespace := "my-test-namespace"
 
 	query := "What is the capital of the moon?"
 
