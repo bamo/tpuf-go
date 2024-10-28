@@ -75,7 +75,7 @@ The `Query` method allows you to search for documents using various methods. Her
 
 ### Vector Search
 
-Example: searchfor the 5 closest vectors to the given vector using ANN search with the cosine distance metric.
+Example: search for the 5 closest vectors to the given vector using ANN search with the cosine distance metric.
 
 ```go
 request := &tpuf.QueryRequest{
