@@ -7,9 +7,13 @@ import (
 )
 
 type RecallRequest struct {
-	Num     int         `json:"num,omitempty"`
-	TopK    int         `json:"top_k,omitempty"`
-	Filters Filter      `json:"filters,omitempty"`
+	// Num is the number of searches to run (default 25)
+	Num int `json:"num,omitempty"`
+	// TopK is the number of nearest neighbors to search for (default 10)
+	TopK int `json:"top_k,omitempty"`
+	// Filters is an optional filter on document attributes
+	Filters Filter `json:"filters,omitempty"`
+	// Queries is a list of query vectors.  If omitted, queries are sampled from the index.
 	Queries [][]float32 `json:"queries,omitempty"`
 }
 
@@ -19,6 +23,8 @@ type RecallResponse struct {
 	AvgAnnCount        float64 `json:"avg_ann_count"`
 }
 
+// Recall tests the ANN search algorithm compared to exhaustive search.
+// See https://turbopuffer.com/docs/recall for more details.
 func (c *Client) Recall(ctx context.Context, namespace string, request *RecallRequest) (*RecallResponse, error) {
 	path := fmt.Sprintf("/v1/vectors/%s/_debug/recall", namespace)
 	reqJson, err := json.Marshal(request)
