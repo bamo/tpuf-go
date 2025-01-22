@@ -100,6 +100,28 @@ func TestQuery(t *testing.T) {
 			},
 		},
 		{
+			name:      "nil filter",
+			namespace: "test-namespace",
+			request: &tpuf.QueryRequest{
+				Filters: nil,
+				TopK:    2,
+			},
+			httpResponse: &http.Response{
+				StatusCode: http.StatusOK,
+				Body: io.NopCloser(bytes.NewBufferString(`[
+					{"id":"1","dist":0},
+					{"id":"2","dist":0}
+				]`)),
+			},
+			expectedMethod: http.MethodPost,
+			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace/query",
+			expectedBody:   `{"top_k":2}`,
+			expectedResult: []*tpuf.QueryResult{
+				{ID: "1", Dist: 0},
+				{ID: "2", Dist: 0},
+			},
+		},
+		{
 			name:      "query error",
 			namespace: "test-namespace",
 			request:   &tpuf.QueryRequest{TopK: 1},

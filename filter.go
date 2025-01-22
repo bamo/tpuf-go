@@ -44,6 +44,9 @@ func (bf *BaseFilter) tpuf_SerializeFilter() interface{} {
 }
 
 func (f *BaseFilter) MarshalJSON() ([]byte, error) {
+	if f == nil {
+		return []byte("null"), nil
+	}
 	return json.Marshal(f.tpuf_SerializeFilter())
 }
 
@@ -55,15 +58,21 @@ type AndFilter struct {
 func (af *AndFilter) tpuf_SerializeFilter() interface{} {
 	serialized := make([]interface{}, 2)
 	serialized[0] = "And"
-	subFilters := make([]interface{}, len(af.Filters))
-	for i, filter := range af.Filters {
-		subFilters[i] = filter.tpuf_SerializeFilter()
+	subFilters := make([]interface{}, 0, len(af.Filters))
+	for _, filter := range af.Filters {
+		if filter == nil {
+			continue
+		}
+		subFilters = append(subFilters, filter.tpuf_SerializeFilter())
 	}
 	serialized[1] = subFilters
 	return serialized
 }
 
 func (f *AndFilter) MarshalJSON() ([]byte, error) {
+	if f == nil {
+		return []byte("null"), nil
+	}
 	return json.Marshal(f.tpuf_SerializeFilter())
 }
 
@@ -75,14 +84,20 @@ type OrFilter struct {
 func (of *OrFilter) tpuf_SerializeFilter() interface{} {
 	serialized := make([]interface{}, 2)
 	serialized[0] = "Or"
-	subFilters := make([]interface{}, len(of.Filters))
-	for i, filter := range of.Filters {
-		subFilters[i] = filter.tpuf_SerializeFilter()
+	subFilters := make([]interface{}, 0, len(of.Filters))
+	for _, filter := range of.Filters {
+		if filter == nil {
+			continue
+		}
+		subFilters = append(subFilters, filter.tpuf_SerializeFilter())
 	}
 	serialized[1] = subFilters
 	return serialized
 }
 
 func (f *OrFilter) MarshalJSON() ([]byte, error) {
+	if f == nil {
+		return []byte("null"), nil
+	}
 	return json.Marshal(f.tpuf_SerializeFilter())
 }
