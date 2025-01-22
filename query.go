@@ -12,8 +12,8 @@ type QueryRequest struct {
 	// DistanceMetric is the distance metric to use for vector search.
 	// Required if Vector is set.
 	DistanceMetric DistanceMetric `json:"distance_metric,omitempty"`
-	// RankBy is the fields to rank by for BM25 search.
-	// Either Vector or RankBy, but not both, may be set.
+	// RankBy is the fields to rank by, for BM25 search, or fields to order by,
+	// for filter-only search. Either Vector or RankBy, but not both, may be set.
 	RankBy []interface{} `json:"rank_by,omitempty"`
 	// TopK is the maximum number of results to return.  Default 10.
 	TopK int `json:"top_k,omitempty"`
