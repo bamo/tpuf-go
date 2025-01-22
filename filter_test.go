@@ -105,6 +105,25 @@ func TestMarshalFilter(t *testing.T) {
 			},
 			expected: `["And",[["id","In",[1,2,3]],["key1","Eq","one"],["filename","NotGlob","/vendor/**"],["Or",[["filename","Glob","**.tsx"],["filename","Glob","**.js"]]]]]`,
 		},
+		{
+			name: "And filter with nil subfilter",
+			filter: &tpuf.AndFilter{
+				Filters: []tpuf.Filter{
+					&tpuf.BaseFilter{
+						Attribute: "attr1",
+						Operator:  tpuf.OpEq,
+						Value:     "value1",
+					},
+					nil,
+					&tpuf.BaseFilter{
+						Attribute: "attr2",
+						Operator:  tpuf.OpGt,
+						Value:     10,
+					},
+				},
+			},
+			expected: `["And",[["attr1","Eq","value1"],["attr2","Gt",10]]]`,
+		},
 	}
 
 	for _, tt := range tests {
