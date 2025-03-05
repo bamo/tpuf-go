@@ -32,7 +32,7 @@ func TestDelete(t *testing.T) {
 				Body:       io.NopCloser(bytes.NewBufferString(`{"status":"OK"}`)),
 			},
 			expectedMethod: http.MethodPost,
-			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace",
+			expectedURL:    "https://api.turbopuffer.com/v1/namespaces/test-namespace",
 			expectedBody:   `{"upserts":[{"id":"1"},{"id":"2"},{"id":"3"}]}`,
 		},
 		{
@@ -45,7 +45,7 @@ func TestDelete(t *testing.T) {
 			},
 			expectedError:  "failed to upsert documents: error: Invalid request (HTTP 400)",
 			expectedMethod: http.MethodPost,
-			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace",
+			expectedURL:    "https://api.turbopuffer.com/v1/namespaces/test-namespace",
 			expectedBody:   `{"upserts":[{"id":"4"},{"id":"5"}]}`,
 		},
 	}

@@ -39,7 +39,7 @@ func TestNamespaces(t *testing.T) {
 				}`)),
 			},
 			expectedMethod: http.MethodGet,
-			expectedURL:    "https://api.turbopuffer.com/v1/vectors?page_size=10&prefix=test",
+			expectedURL:    "https://api.turbopuffer.com/v1/namespaces?page_size=10&prefix=test",
 			expectedResult: &tpuf.NamespacesResponse{
 				Namespaces: []*tpuf.Namespace{
 					{ID: "test1"},
@@ -66,7 +66,7 @@ func TestNamespaces(t *testing.T) {
 				}`)),
 			},
 			expectedMethod: http.MethodGet,
-			expectedURL:    "https://api.turbopuffer.com/v1/vectors?cursor=previous_page_cursor&page_size=5&prefix=test",
+			expectedURL:    "https://api.turbopuffer.com/v1/namespaces?cursor=previous_page_cursor&page_size=5&prefix=test",
 			expectedResult: &tpuf.NamespacesResponse{
 				Namespaces: []*tpuf.Namespace{
 					{ID: "test3"},
@@ -86,7 +86,7 @@ func TestNamespaces(t *testing.T) {
 			},
 			expectedError:  "failed to list namespaces: error: Invalid request (HTTP 400)",
 			expectedMethod: http.MethodGet,
-			expectedURL:    "https://api.turbopuffer.com/v1/vectors?page_size=10",
+			expectedURL:    "https://api.turbopuffer.com/v1/namespaces?page_size=10",
 		},
 	}
 
@@ -138,7 +138,7 @@ func TestDeleteNamespace(t *testing.T) {
 				Body:       io.NopCloser(bytes.NewBufferString(`{"status":"OK"}`)),
 			},
 			expectedMethod: http.MethodDelete,
-			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace",
+			expectedURL:    "https://api.turbopuffer.com/v1/namespaces/test-namespace",
 		},
 		{
 			name:      "delete failure",
@@ -149,7 +149,7 @@ func TestDeleteNamespace(t *testing.T) {
 			},
 			expectedError:  "failed to delete namespace: error: Namespace not found (HTTP 404)",
 			expectedMethod: http.MethodDelete,
-			expectedURL:    "https://api.turbopuffer.com/v1/vectors/non-existent-namespace",
+			expectedURL:    "https://api.turbopuffer.com/v1/namespaces/non-existent-namespace",
 		},
 	}
 

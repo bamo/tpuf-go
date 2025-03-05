@@ -46,7 +46,7 @@ func TestRecall(t *testing.T) {
 				}`)),
 			},
 			expectedMethod: http.MethodPost,
-			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace/_debug/recall",
+			expectedURL:    "https://api.turbopuffer.com/v1/namespaces/test-namespace/_debug/recall",
 			expectedBody:   `{"num":100,"top_k":10,"filters":["And",[["category","Eq","electronics"]]],"queries":[[0.1,0.2,0.3],[0.4,0.5,0.6]]}`,
 			expectedResult: &tpuf.RecallResponse{
 				AvgRecall:          0.95,
@@ -66,7 +66,7 @@ func TestRecall(t *testing.T) {
 			},
 			expectedError:  "failed to perform recall: error: Invalid request (HTTP 400)",
 			expectedMethod: http.MethodPost,
-			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace/_debug/recall",
+			expectedURL:    "https://api.turbopuffer.com/v1/namespaces/test-namespace/_debug/recall",
 			expectedBody:   `{"num":10}`,
 		},
 	}

@@ -35,7 +35,7 @@ func (c *Client) Upsert(ctx context.Context, namespace string, request *UpsertRe
 }
 
 func (c *Client) upsert(ctx context.Context, namespace string, request *UpsertRequest, allowDelete bool) error {
-	path := fmt.Sprintf("/v1/vectors/%s", namespace)
+	path := fmt.Sprintf("/v1/namespaces/%s", namespace)
 	if !allowDelete {
 		for _, upsert := range request.Upserts {
 			if len(upsert.Vector) == 0 {

@@ -34,7 +34,7 @@ type NamespacesResponse struct {
 // This query is paginated according to the input page size.  The returned NextCursor may be used to fetch the next page.
 // See https://turbopuffer.com/docs/namespaces for more details.
 func (c *Client) Namespaces(ctx context.Context, request *NamespacesRequest) (*NamespacesResponse, error) {
-	path := "/v1/vectors"
+	path := "/v1/namespaces"
 	params := url.Values{}
 	if request.PageSize > 0 {
 		params.Set("page_size", strconv.Itoa(request.PageSize))
@@ -62,7 +62,7 @@ func (c *Client) Namespaces(ctx context.Context, request *NamespacesRequest) (*N
 // DeleteNamespace deletes a namespace entirely, including all documents.
 // See https://turbopuffer.com/docs/delete-namespace for more details.
 func (c *Client) DeleteNamespace(ctx context.Context, namespace string) error {
-	path := fmt.Sprintf("/v1/vectors/%s", namespace)
+	path := fmt.Sprintf("/v1/namespaces/%s", namespace)
 	_, err := c.delete(ctx, path)
 	if err != nil {
 		return fmt.Errorf("failed to delete namespace: %w", err)

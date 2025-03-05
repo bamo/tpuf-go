@@ -41,7 +41,7 @@ func TestQuery(t *testing.T) {
 				]`)),
 			},
 			expectedMethod: http.MethodPost,
-			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace/query",
+			expectedURL:    "https://api.turbopuffer.com/v1/namespaces/test-namespace/query",
 			expectedBody:   `{"vector":[0.1,0.2,0.3],"distance_metric":"cosine_distance","top_k":5,"include_vectors":true}`,
 			expectedResult: []*tpuf.QueryResult{
 				{ID: "1", Dist: 0.1, Vector: []float32{0.11, 0.21, 0.31}},
@@ -64,7 +64,7 @@ func TestQuery(t *testing.T) {
 				]`)),
 			},
 			expectedMethod: http.MethodPost,
-			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace/query",
+			expectedURL:    "https://api.turbopuffer.com/v1/namespaces/test-namespace/query",
 			expectedBody:   `{"rank_by":["description","BM25","fox jumping"],"top_k":3}`,
 			expectedResult: []*tpuf.QueryResult{
 				{ID: "1", Dist: 1.5},
@@ -92,7 +92,7 @@ func TestQuery(t *testing.T) {
 				]`)),
 			},
 			expectedMethod: http.MethodPost,
-			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace/query",
+			expectedURL:    "https://api.turbopuffer.com/v1/namespaces/test-namespace/query",
 			expectedBody:   `{"filters":["And",[["category", "Eq", "electronics"],["price", "Gte", 100]]],"top_k":2}`,
 			expectedResult: []*tpuf.QueryResult{
 				{ID: "1", Dist: 0},
@@ -114,7 +114,7 @@ func TestQuery(t *testing.T) {
 				]`)),
 			},
 			expectedMethod: http.MethodPost,
-			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace/query",
+			expectedURL:    "https://api.turbopuffer.com/v1/namespaces/test-namespace/query",
 			expectedBody:   `{"top_k":2}`,
 			expectedResult: []*tpuf.QueryResult{
 				{ID: "1", Dist: 0},
@@ -131,7 +131,7 @@ func TestQuery(t *testing.T) {
 			},
 			expectedError:  "failed to query documents: error: Invalid query (HTTP 400)",
 			expectedMethod: http.MethodPost,
-			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace/query",
+			expectedURL:    "https://api.turbopuffer.com/v1/namespaces/test-namespace/query",
 			expectedBody:   `{"top_k":1}`,
 		},
 	}
