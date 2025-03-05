@@ -81,3 +81,113 @@ func TestDelete(t *testing.T) {
 		})
 	}
 }
+
+func TestDeleteByFilter(t *testing.T) {
+	tests := []struct {
+		name           string
+		namespace      string
+		request        *tpuf.DeleteByFilterRequest
+		httpResponse   *http.Response
+		httpError      error
+		expectedError  string
+		expectedMethod string
+		expectedURL    string
+		expectedBody   string
+	}{
+		{
+			name:      "successful delete by filter",
+			namespace: "test-namespace",
+			request: &tpuf.DeleteByFilterRequest{
+				Filter: &tpuf.BaseFilter{
+					Attribute: "category",
+					Operator:  tpuf.OpEq,
+					Value:     "electronics",
+				},
+			},
+			httpResponse: &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(bytes.NewBufferString(`{"status":"OK"}`)),
+			},
+			expectedMethod: http.MethodPost,
+			expectedURL:    "https://api.turbopuffer.com/v1/namespaces/test-namespace",
+			expectedBody:   `{"delete_by_filter":["category","Eq","electronics"]}`,
+		},
+		{
+			name:      "delete by complex filter",
+			namespace: "test-namespace",
+			request: &tpuf.DeleteByFilterRequest{
+				Filter: &tpuf.AndFilter{
+					Filters: []tpuf.Filter{
+						&tpuf.BaseFilter{
+							Attribute: "category",
+							Operator:  tpuf.OpEq,
+							Value:     "electronics",
+						},
+						&tpuf.BaseFilter{
+							Attribute: "price",
+							Operator:  tpuf.OpGt,
+							Value:     100,
+						},
+					},
+				},
+			},
+			httpResponse: &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(bytes.NewBufferString(`{"status":"OK"}`)),
+			},
+			expectedMethod: http.MethodPost,
+			expectedURL:    "https://api.turbopuffer.com/v1/namespaces/test-namespace",
+			expectedBody:   `{"delete_by_filter":["And",[["category","Eq","electronics"],["price","Gt",100]]]}`,
+		},
+		{
+			name:      "delete by filter error",
+			namespace: "test-namespace",
+			request: &tpuf.DeleteByFilterRequest{
+				Filter: &tpuf.BaseFilter{
+					Attribute: "invalid_field",
+					Operator:  tpuf.OpEq,
+					Value:     "value",
+				},
+			},
+			httpResponse: &http.Response{
+				StatusCode: http.StatusBadRequest,
+				Body:       io.NopCloser(bytes.NewBufferString(`{"error":"Invalid filter","status":"error"}`)),
+			},
+			expectedError:  "failed to delete by filter: error: Invalid filter (HTTP 400)",
+			expectedMethod: http.MethodPost,
+			expectedURL:    "https://api.turbopuffer.com/v1/namespaces/test-namespace",
+			expectedBody:   `{"delete_by_filter":["invalid_field","Eq","value"]}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client := &tpuf.Client{
+				ApiToken: "test-token",
+				HttpClient: &fakeHttpClient{
+					doFunc: func(req *http.Request) (*http.Response, error) {
+						assert.Equal(t, tt.expectedMethod, req.Method, "unexpected request method")
+						assert.Equal(t, tt.expectedURL, req.URL.String(), "unexpected request URL")
+
+						body, _ := io.ReadAll(req.Body)
+						assert.JSONEq(t, tt.expectedBody, string(body), "unexpected request body")
+
+						assert.Equal(t, "Bearer test-token", req.Header.Get("Authorization"), "unexpected Authorization header")
+						assert.Equal(t, "application/json", req.Header.Get("Content-Type"), "unexpected Content-Type header")
+						assert.Equal(t, "application/json", req.Header.Get("Accept"), "unexpected Accept header")
+
+						return tt.httpResponse, tt.httpError
+					},
+				},
+			}
+
+			err := client.DeleteByFilter(context.Background(), tt.namespace, tt.request)
+
+			if tt.expectedError == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.expectedError)
+			}
+		})
+	}
+}
