@@ -41,7 +41,7 @@ type QueryResult struct {
 // For BM25 search, provide RankBy.
 // For filter-only search, omit both Vector and RankBy.
 func (c *Client) Query(ctx context.Context, namespace string, request *QueryRequest) ([]*QueryResult, error) {
-	path := fmt.Sprintf("/v1/vectors/%s/query", namespace)
+	path := fmt.Sprintf("/v1/namespaces/%s/query", namespace)
 	reqJson, err := json.Marshal(request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)

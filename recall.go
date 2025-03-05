@@ -26,7 +26,7 @@ type RecallResponse struct {
 // Recall tests the ANN search algorithm compared to exhaustive search.
 // See https://turbopuffer.com/docs/recall for more details.
 func (c *Client) Recall(ctx context.Context, namespace string, request *RecallRequest) (*RecallResponse, error) {
-	path := fmt.Sprintf("/v1/vectors/%s/_debug/recall", namespace)
+	path := fmt.Sprintf("/v1/namespaces/%s/_debug/recall", namespace)
 	reqJson, err := json.Marshal(request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)

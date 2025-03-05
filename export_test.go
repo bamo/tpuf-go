@@ -44,7 +44,7 @@ func TestExport(t *testing.T) {
 				},
 			},
 			expectedMethod: http.MethodGet,
-			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace",
+			expectedURL:    "https://api.turbopuffer.com/v1/namespaces/test-namespace",
 			expectedResult: &tpuf.ExportResponse{
 				IDs:     []string{"1", "2"},
 				Vectors: [][]float32{{0.1, 0.1}, {0.2, 0.2}},
@@ -74,7 +74,7 @@ func TestExport(t *testing.T) {
 				},
 			},
 			expectedMethod: http.MethodGet,
-			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace?cursor=eyJmaWxlX2lkIjoxMTMzfQ",
+			expectedURL:    "https://api.turbopuffer.com/v1/namespaces/test-namespace?cursor=eyJmaWxlX2lkIjoxMTMzfQ",
 			expectedResult: &tpuf.ExportResponse{
 				IDs:     []string{"3", "4"},
 				Vectors: [][]float32{{0.3, 0.3}, {0.4, 0.4}},
@@ -112,7 +112,7 @@ func TestExport(t *testing.T) {
 				},
 			},
 			expectedMethod: http.MethodGet,
-			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace",
+			expectedURL:    "https://api.turbopuffer.com/v1/namespaces/test-namespace",
 			expectedResult: &tpuf.ExportResponse{
 				IDs:     []string{"5", "6"},
 				Vectors: [][]float32{{0.5, 0.5}, {0.6, 0.6}},
@@ -135,7 +135,7 @@ func TestExport(t *testing.T) {
 			},
 			expectedError:  "failed to export documents: error: Invalid request (HTTP 400)",
 			expectedMethod: http.MethodGet,
-			expectedURL:    "https://api.turbopuffer.com/v1/vectors/test-namespace",
+			expectedURL:    "https://api.turbopuffer.com/v1/namespaces/test-namespace",
 		},
 	}
 

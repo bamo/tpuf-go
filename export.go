@@ -18,7 +18,7 @@ type ExportResponse struct {
 // It returns documents in a column-oriented layout.
 // Use the NextCursor from the response to retrieve the next page of results.
 func (c *Client) Export(ctx context.Context, namespace string, cursor string) (*ExportResponse, error) {
-	path := fmt.Sprintf("/v1/vectors/%s", namespace)
+	path := fmt.Sprintf("/v1/namespaces/%s", namespace)
 
 	params := url.Values{}
 	if cursor != "" {

@@ -34,20 +34,8 @@ func (c *Client) Upsert(ctx context.Context, namespace string, request *UpsertRe
 	return c.upsert(ctx, namespace, request, false)
 }
 
-// Delete deletes documents from a namespace.
-// See https://turbopuffer.com/docs/upsert#document-deletion
-func (c *Client) Delete(ctx context.Context, namespace string, ids []string) error {
-	var upserts []*Upsert
-	for _, id := range ids {
-		upserts = append(upserts, &Upsert{ID: id})
-	}
-	return c.upsert(ctx, namespace, &UpsertRequest{
-		Upserts: upserts,
-	}, true)
-}
-
 func (c *Client) upsert(ctx context.Context, namespace string, request *UpsertRequest, allowDelete bool) error {
-	path := fmt.Sprintf("/v1/vectors/%s", namespace)
+	path := fmt.Sprintf("/v1/namespaces/%s", namespace)
 	if !allowDelete {
 		for _, upsert := range request.Upserts {
 			if len(upsert.Vector) == 0 {

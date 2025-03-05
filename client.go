@@ -46,6 +46,13 @@ type Client struct {
 
 const defaultBaseURL = "https://api.turbopuffer.com"
 
+const (
+	GCPUSCentral1BaseURL  = "https://gcp-us-central1.turbopuffer.com"
+	GCPUSWest1BaseURL     = "https://gcp-us-west1.turbopuffer.com"
+	GCPUSEast4BaseURL     = "https://gcp-us-east4.turbopuffer.com"
+	GCPEuropeWest3BaseURL = "https://gcp-europe-west3.turbopuffer.com"
+)
+
 func (c *Client) baseURL() string {
 	if c.BaseURL == "" {
 		return defaultBaseURL
