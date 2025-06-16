@@ -47,6 +47,12 @@ type Client struct {
 const defaultBaseURL = "https://api.turbopuffer.com"
 
 const (
+	AWSAPSE2BaseURL = "https://aws-ap-southeast-2.turbopuffer.com"
+	AWSEUC1BaseURL  = "https://aws-eu-central-1.turbopuffer.com"
+	AWSUSE1BaseURL  = "https://aws-us-east-1.turbopuffer.com"
+	AWSUSE2BaseURL  = "https://aws-us-east-2.turbopuffer.com"
+	AWSUSW2BaseURL  = "https://aws-us-west-2.turbopuffer.com"
+
 	GCPUSCentral1BaseURL  = "https://gcp-us-central1.turbopuffer.com"
 	GCPUSWest1BaseURL     = "https://gcp-us-west1.turbopuffer.com"
 	GCPUSEast4BaseURL     = "https://gcp-us-east4.turbopuffer.com"
