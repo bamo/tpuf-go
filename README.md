@@ -1,6 +1,12 @@
 # tpuf-go
 
-`tpuf-go` is a Golang API client for Turbopuffer (turbopuffer.com), a vector database and search engine. This client provides an easy-to-use interface for interacting with the Turbopuffer API, allowing you to perform operations such as upserting documents, querying data, and managing namespaces.
+> **⚠️ DEPRECATED:** This repository is no longer maintained. Please use the official Turbopuffer Go client instead:
+>
+> **[github.com/turbopuffer/turbopuffer-go](https://github.com/turbopuffer/turbopuffer-go)**
+
+---
+
+`tpuf-go` was an unofficial Golang API client for Turbopuffer. It has been superseded by the official client linked above.
 
 ## Installation
 
@@ -145,4 +151,4 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 ## Contributing
 
-You are more than welcome to contribute to this project.  Feel free to open issues or submit pull requests.  We are still working on further contribution guidelines.
+This repository is deprecated and no longer accepting contributions. Please direct any contributions to the [official Turbopuffer Go client](https://github.com/turbopuffer/turbopuffer-go).
