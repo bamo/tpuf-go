@@ -1,5 +1,8 @@
 // Package tpuf provides a go client for the Turbopuffer API.
 // See https://turbopuffer.com/docs for more information.
+//
+// Deprecated: This package is no longer maintained. Use the official
+// Turbopuffer Go client instead: https://github.com/turbopuffer/turbopuffer-go
 package tpuf
 
 import (
